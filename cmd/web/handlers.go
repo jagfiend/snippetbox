@@ -3,17 +3,16 @@ package main
 import (
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"strconv"
 )
 
-func home(w http.ResponseWriter, r *http.Request) {
+func (app application) home(w http.ResponseWriter, r *http.Request) {
 	// playing with redirects
 	http.Redirect(w, r, "/snippets", http.StatusPermanentRedirect)
 }
 
-func snippetsIndex(w http.ResponseWriter, r *http.Request) {
+func (app application) snippetsIndex(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Server", "Wondini")
 
 	templates := []string{
@@ -25,8 +24,7 @@ func snippetsIndex(w http.ResponseWriter, r *http.Request) {
 	ts, err := template.ParseFiles(templates...)
 
 	if err != nil {
-		log.Print(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		app.serverError(w, r, err)
 
 		return
 	}
@@ -34,26 +32,27 @@ func snippetsIndex(w http.ResponseWriter, r *http.Request) {
 	err = ts.ExecuteTemplate(w, "base", nil)
 
 	if err != nil {
-		log.Print(err.Error())
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		app.serverError(w, r, err)
 	}
 }
 
-func snippetsShow(w http.ResponseWriter, r *http.Request) {
+func (app application) snippetsShow(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Display a specific snippet..."))
 }
 
-func snippetsCreate(w http.ResponseWriter, r *http.Request) {
+func (app application) snippetsCreate(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Display the create snippet form..."))
 }
 
-func snippetsStore(w http.ResponseWriter, r *http.Request) {
+func (app application) snippetsStore(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 
 	if err != nil || id < 1 {
 		http.NotFound(w, r)
 		return
 	}
+
+	w.WriteHeader(http.StatusCreated)
 
 	fmt.Fprintf(w, "Display the snippet with ID %d...", id)
 }

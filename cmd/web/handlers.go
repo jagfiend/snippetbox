@@ -59,7 +59,27 @@ func (app *application) snippetsShow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "%+v", snippet)
+	templates := []string{
+		"./ui/html/base.tmpl.html",
+		"./ui/html/partials/nav.tmpl.html",
+		"./ui/html/partials/view.tmpl.html",
+	}
+
+	ts, err := template.ParseFiles(templates...)
+
+	if err != nil {
+		app.serverError(w, r, err)
+
+		return
+	}
+
+	err = ts.ExecuteTemplate(w, "base", snippet)
+
+	if err != nil {
+		app.serverError(w, r, err)
+
+		return
+	}
 }
 
 func (app *application) snippetsCreate(w http.ResponseWriter, r *http.Request) {

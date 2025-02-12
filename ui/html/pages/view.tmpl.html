@@ -1,6 +1,8 @@
-{{ define "title"}}Snippet #{{ .ID }}{{ end }}
+{{ define "title"}}Snippet #{{ .Snippet.ID }}{{ end }}
 
 {{ define "main" }}
+    <!-- example of using with to change the context of the dot value -->
+    {{ with .Snippet }}
     <div class="snippet">
         <div class="metadata">
             <strong>{{ .Title }}</strong>
@@ -12,4 +14,5 @@
             <time>{{ .Expires }}</time>
         </div>
     </div>
+    {{ end }}
 {{ end }}

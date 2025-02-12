@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"html/template"
 	"net/http"
 	"strconv"
 
@@ -18,25 +17,14 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 func (app *application) snippetsIndex(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Server", "Wondini")
 
-	templates := []string{
-		"./ui/html/base.tmpl.html",
-		"./ui/html/partials/nav.tmpl.html",
-		"./ui/html/pages/home.tmpl.html",
-	}
-
-	ts, err := template.ParseFiles(templates...)
+	snippets, err := app.snippets.Latest()
 
 	if err != nil {
 		app.serverError(w, r, err)
-
 		return
 	}
 
-	err = ts.ExecuteTemplate(w, "base", nil)
-
-	if err != nil {
-		app.serverError(w, r, err)
-	}
+	app.render(w, r, http.StatusOK, "home.tmpl.html", templateData{Snippets: snippets})
 }
 
 func (app *application) snippetsShow(w http.ResponseWriter, r *http.Request) {
@@ -59,27 +47,7 @@ func (app *application) snippetsShow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	templates := []string{
-		"./ui/html/base.tmpl.html",
-		"./ui/html/partials/nav.tmpl.html",
-		"./ui/html/partials/view.tmpl.html",
-	}
-
-	ts, err := template.ParseFiles(templates...)
-
-	if err != nil {
-		app.serverError(w, r, err)
-
-		return
-	}
-
-	err = ts.ExecuteTemplate(w, "base", snippet)
-
-	if err != nil {
-		app.serverError(w, r, err)
-
-		return
-	}
+	app.render(w, r, http.StatusOK, "view.tmpl.html", templateData{Snippet: snippet})
 }
 
 func (app *application) snippetsCreate(w http.ResponseWriter, r *http.Request) {
@@ -95,7 +63,6 @@ func (app *application) snippetsStore(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		app.serverError(w, r, err)
-
 		return
 	}
 

@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"text/template"
 
 	"github.com/jagfiend/snippetbox/internal/models"
 
@@ -13,8 +14,9 @@ import (
 )
 
 type application struct {
-	logger   *slog.Logger
-	snippets *models.SnippetModel
+	logger        *slog.Logger
+	snippets      *models.SnippetModel
+	templateCache map[string]*template.Template
 }
 
 func main() {
@@ -29,6 +31,7 @@ func main() {
 		AddSource: true,
 	}))
 
+	// spin up database connection pool
 	db, err := openDb(*dsn)
 
 	if err != nil {
@@ -40,10 +43,19 @@ func main() {
 	// the deferred functions, leaving here in case we add graceful shutdown later
 	defer db.Close()
 
+	// initialise template cache
+	templateCache, err := newTemplateCache()
+
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
+
 	// spin up application
 	app := &application{
-		logger:   logger,
-		snippets: &models.SnippetModel{DB: db},
+		logger:        logger,
+		snippets:      &models.SnippetModel{DB: db},
+		templateCache: templateCache,
 	}
 
 	logger.Info("attempting to start server", "addr", *addr)
@@ -66,7 +78,6 @@ func openDb(dsn string) (*sql.DB, error) {
 
 	if err != nil {
 		db.Close()
-
 		return nil, err
 	}
 

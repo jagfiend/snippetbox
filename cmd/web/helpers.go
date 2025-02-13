@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"runtime/debug"
+	"time"
 )
 
 func (app *application) serverError(w http.ResponseWriter, r *http.Request, err error) {
@@ -24,11 +26,22 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, status in
 		return
 	}
 
-	w.WriteHeader(status)
+	// use a buffer here to catch errors the templating early rather than serving a dodgy page with a 200
+	buf := new(bytes.Buffer)
 
-	err := ts.ExecuteTemplate(w, "base", data)
+	err := ts.ExecuteTemplate(buf, "base", data)
 
 	if err != nil {
 		app.serverError(w, r, err)
+	}
+
+	w.WriteHeader(status)
+
+	buf.WriteTo(w)
+}
+
+func (app *application) newTemplateData(r *http.Request) templateData {
+	return templateData{
+		CurrentYear: time.Now().Year(),
 	}
 }

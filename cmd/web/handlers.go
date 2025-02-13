@@ -24,7 +24,10 @@ func (app *application) snippetsIndex(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app.render(w, r, http.StatusOK, "home.tmpl.html", templateData{Snippets: snippets})
+	data := app.newTemplateData(r)
+	data.Snippets = snippets
+
+	app.render(w, r, http.StatusOK, "home.tmpl.html", data)
 }
 
 func (app *application) snippetsShow(w http.ResponseWriter, r *http.Request) {
@@ -47,7 +50,10 @@ func (app *application) snippetsShow(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app.render(w, r, http.StatusOK, "view.tmpl.html", templateData{Snippet: snippet})
+	data := app.newTemplateData(r)
+	data.Snippet = snippet
+
+	app.render(w, r, http.StatusOK, "view.tmpl.html", data)
 }
 
 func (app *application) snippetsCreate(w http.ResponseWriter, r *http.Request) {

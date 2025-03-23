@@ -1,8 +1,12 @@
 package main
 
-import "net/http"
+import (
+	"net/http"
 
-func (app *application) routes() *http.ServeMux {
+	"github.com/justinas/alice"
+)
+
+func (app *application) routes() http.Handler {
 	mux := http.NewServeMux()
 
 	// serve static files
@@ -18,5 +22,8 @@ func (app *application) routes() *http.ServeMux {
 	mux.HandleFunc("GET /snippets/create", app.snippetsCreate)
 	mux.HandleFunc("POST /snippets", app.snippetsStore)
 
-	return mux
+	// setup middleware chain, using package instead of nesting funcs: app.recoverPanic(app.logRequest(commonHeaders(mux)))
+	middleware := alice.New(app.recoverPanic, app.logRequest, commonHeaders)
+
+	return middleware.Then(mux)
 }

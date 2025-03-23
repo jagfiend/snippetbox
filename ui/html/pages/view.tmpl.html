@@ -10,6 +10,7 @@
         </div>
         <pre><code>{{ .Content }}</code></pre>
         <div class="metadata">
+            <!-- exampe of piping a do value into a helper func -->
             <time>{{ .Created | humanDate }}</time>
             <time>{{ .Expires | humanDate }}</time>
         </div>

@@ -7,11 +7,14 @@ import (
 	"strconv"
 
 	"github.com/jagfiend/snippetbox/internal/models"
+	"github.com/jagfiend/snippetbox/internal/validator"
 )
 
-func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	// playing with redirects
-	http.Redirect(w, r, "/snippets", http.StatusPermanentRedirect)
+type snippetCreateForm struct {
+	Title               string `form:"title`
+	Content             string `form:"content"`
+	Expires             int    `form:"expires"`
+	validator.Validator `form:"-"`
 }
 
 func (app *application) snippetsIndex(w http.ResponseWriter, r *http.Request) {
@@ -57,15 +60,36 @@ func (app *application) snippetsShow(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) snippetsCreate(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Display the create snippet form..."))
+	data := app.newTemplateData(r)
+	data.Form = snippetCreateForm{Expires: 365}
+
+	app.render(w, r, http.StatusOK, "create.tmpl.html", data)
 }
 
 func (app *application) snippetsStore(w http.ResponseWriter, r *http.Request) {
-	title := "O snail"
-	content := "O snail\nClimb Mount Fuji,\nBut slowly, slowly!\n\n– Kobayashi Issa"
-	expires := 7
+	var form snippetCreateForm
 
-	id, err := app.snippets.Create(title, content, expires)
+	err := app.decodePostForm(r, &form)
+
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	// error handling
+	form.CheckField(validator.NotBlank(form.Title), "title", "The title field cannot be blank")
+	form.CheckField(validator.MaxChars(form.Title, 100), "title", "The title field cannot be more than 100 characters")
+	form.CheckField(validator.NotBlank(form.Content), "content", "The content field cannot be blank")
+	form.CheckField(validator.PermittedValue(form.Expires, 1, 7, 365), "expires", "Invalid value give for field expires")
+
+	if !form.Valid() {
+		data := app.newTemplateData(r)
+		data.Form = form
+		app.render(w, r, http.StatusUnprocessableEntity, "create.tmpl.html", data)
+		return
+	}
+
+	id, err := app.snippets.Create(form.Title, form.Content, form.Expires)
 
 	if err != nil {
 		app.serverError(w, r, err)

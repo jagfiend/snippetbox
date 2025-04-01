@@ -11,15 +11,13 @@ import (
 )
 
 type snippetCreateForm struct {
-	Title               string `form:"title`
+	Title               string `form:"title"`
 	Content             string `form:"content"`
 	Expires             int    `form:"expires"`
 	validator.Validator `form:"-"`
 }
 
 func (app *application) snippetsIndex(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Server", "Wondini")
-
 	snippets, err := app.snippets.Latest()
 
 	if err != nil {
@@ -96,5 +94,7 @@ func (app *application) snippetsStore(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("/snippets/%d", id), http.StatusSeeOther)
+	app.sessionManager.Put(r.Context(), "flash", "Snippet successfully created")
+
+	http.Redirect(w, r, fmt.Sprintf("/snippet/%d", id), http.StatusSeeOther)
 }

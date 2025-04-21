@@ -22,6 +22,13 @@ func (app *application) routes() http.Handler {
 	mux.Handle("GET /snippet/create", dynamic.ThenFunc(app.snippetsCreate))
 	mux.Handle("POST /snippet/create", dynamic.ThenFunc(app.snippetsStore))
 
+	// user registration and auth
+	mux.Handle("GET /user/signup", dynamic.ThenFunc(app.userSignup))
+	mux.Handle("POST /user/signup", dynamic.ThenFunc(app.userSignupPost))
+	mux.Handle("GET /user/login", dynamic.ThenFunc(app.userLogin))
+	mux.Handle("POST /user/login", dynamic.ThenFunc(app.userLoginPost))
+	mux.Handle("POST /user/logout", dynamic.ThenFunc(app.userLogoutPost))
+
 	// setup middleware chain, using alice package instead of nesting funcs eg: app.recoverPanic(app.logRequest(commonHeaders(mux)))
 	middleware := alice.New(app.recoverPanic, app.logRequest, commonHeaders)
 

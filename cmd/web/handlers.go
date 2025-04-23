@@ -109,7 +109,7 @@ func (app *application) snippetsStore(w http.ResponseWriter, r *http.Request) {
 
 	app.sessionManager.Put(r.Context(), "flash", "Snippet successfully created")
 
-	http.Redirect(w, r, fmt.Sprintf("/snippet/%d", id), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
 }
 
 func (app *application) userSignup(w http.ResponseWriter, r *http.Request) {

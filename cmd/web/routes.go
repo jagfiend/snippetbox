@@ -16,21 +16,22 @@ func (app *application) routes() http.Handler {
 
 	dynamic := alice.New(app.sessionManager.LoadAndSave)
 
-	// homepage and CRUD routes
 	mux.Handle("GET /{$}", dynamic.ThenFunc(app.snippetsIndex))
 	mux.Handle("GET /snippet/view/{id}", dynamic.ThenFunc(app.snippetsShow))
-	mux.Handle("GET /snippet/create", dynamic.ThenFunc(app.snippetsCreate))
-	mux.Handle("POST /snippet/create", dynamic.ThenFunc(app.snippetsStore))
-
-	// user registration and auth
 	mux.Handle("GET /user/signup", dynamic.ThenFunc(app.userSignup))
 	mux.Handle("POST /user/signup", dynamic.ThenFunc(app.userSignupPost))
 	mux.Handle("GET /user/login", dynamic.ThenFunc(app.userLogin))
 	mux.Handle("POST /user/login", dynamic.ThenFunc(app.userLoginPost))
-	mux.Handle("POST /user/logout", dynamic.ThenFunc(app.userLogoutPost))
 
-	// setup middleware chain, using alice package instead of nesting funcs eg: app.recoverPanic(app.logRequest(commonHeaders(mux)))
-	middleware := alice.New(app.recoverPanic, app.logRequest, commonHeaders)
+	protected := dynamic.Append(app.requireAuthentication)
 
-	return middleware.Then(mux)
+	mux.Handle("GET /snippet/create", protected.ThenFunc(app.snippetsCreate))
+	mux.Handle("POST /snippet/create", protected.ThenFunc(app.snippetsStore))
+	mux.Handle("POST /user/logout", protected.ThenFunc(app.userLogoutPost))
+
+	// setup middleware chain, using alice package instead of nesting funcs
+	// eg: app.recoverPanic(app.logRequest(commonHeaders(mux)))
+	standard := alice.New(app.recoverPanic, app.logRequest, commonHeaders)
+
+	return standard.Then(mux)
 }

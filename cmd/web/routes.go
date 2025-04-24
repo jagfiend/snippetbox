@@ -3,16 +3,20 @@ package main
 import (
 	"net/http"
 
+	"github.com/jagfiend/snippetbox/ui"
 	"github.com/justinas/alice"
 )
 
 func (app *application) routes() http.Handler {
 	mux := http.NewServeMux()
 
-	// serve static files
+	// serve static files from disk
 	// see https://www.alexedwards.net/blog/disable-http-fileserver-directory-listings for options to disable directory listings
-	file_server := http.FileServer(http.Dir("./ui/static/"))
-	mux.Handle("GET /static/", http.StripPrefix("/static", file_server))
+	// file_server := http.FileServer(http.Dir("./ui/static/"))
+	// mux.Handle("GET /static/", http.StripPrefix("/static", file_server))
+
+	// serve static files from embedded file system
+	mux.Handle("GET /static/", http.FileServerFS(ui.Files))
 
 	dynamic := alice.New(app.sessionManager.LoadAndSave, app.noSurf, app.authenticate)
 

@@ -42,6 +42,7 @@ func TestCommonHeaders(t *testing.T) {
 	expected = "Wondini"
 	assert.Equal(t, rs.Header.Get("Server"), expected)
 
+	// not setting expected here as http.StatusOK is an int not a string
 	assert.Equal(t, rs.StatusCode, http.StatusOK)
 
 	defer rs.Body.Close()
